@@ -105,7 +105,7 @@ endif(DBOT_BUILD_GPU AND CUDA_FOUND AND GLEW_FOUND AND OPENGL_FOUND)
 #info_end()
 
 ############################
-# Dependencies             #
+# Dependencies             # <<<<<<<<<<<<<<<<<<<<< EDITED
 ############################
 # Use catkin of available otherwise fall back to native cmake
 find_package(catkin QUIET COMPONENTS fl)
@@ -130,11 +130,11 @@ if(catkin_FOUND)
       Eigen)
   list(APPEND dbot_INCLUDE_DIRS ${catkin_INCLUDE_DIRS})
 else(catkin_FOUND)
-  find_package(fl REQUIRED)
-  find_package(osr REQUIRED)
-
+  #find_package(fl REQUIRED)
+  #find_package(osr REQUIRED)
+  set(fl_INCLUDE_DIRS /home/chen/projects/tracking/src/fl/include)
   list(APPEND dbot_INCLUDE_DIRS ${fl_INCLUDE_DIRS})
-  list(APPEND dbot_INCLUDE_DIRS ${osr_INCLUDE_DIRS})
+  #list(APPEND dbot_INCLUDE_DIRS ${osr_INCLUDE_DIRS})
 endif(catkin_FOUND)
 
 ############################
