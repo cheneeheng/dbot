@@ -48,7 +48,7 @@ auto GaussianTracker::on_initialize(
     return belief_.mean();
 }
 
-auto GaussianTracker::on_track(const Obsrv& obsrv) -> State
+auto GaussianTracker::on_track(const Obsrv& obsrv, int& object_pixel_index) -> State
 {
     // the following is approximately ok, but to be correct in a differential
     // geometry sense, the covariance matrix would also have to change due

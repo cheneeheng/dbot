@@ -72,11 +72,17 @@ auto Tracker::track(const Obsrv& image) -> State
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    move_average(to_model_coordinate_system(on_track(image)),
+    auto tracked_pose = on_track(image, object_pixel_index_);
+    move_average(to_model_coordinate_system(tracked_pose),
                  moving_average_,
                  update_rate_);
 
     return moving_average_;
+}
+
+int Tracker::object_pixel_index()
+{
+    return object_pixel_index_;
 }
 
 auto Tracker::to_center_coordinate_system(

@@ -49,6 +49,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <map>
 
 #include <cuda_gl_interop.h>
 
@@ -315,6 +316,7 @@ public:
      */
     RealArray loglikes(const StateArray& deltas,
                        IntArray& occlusion_indices,
+                       int& object_pixel_index,
                        const bool& update_occlusions = false)
     {
 #ifdef PROFILING_ACTIVE
@@ -331,6 +333,7 @@ public:
         }
 
         nr_poses_ = deltas.size();
+        std::vector<int> pixel_points(nr_poses_, 0);
         std::vector<float> flog_likelihoods(nr_poses_, 0);
 
         int tmp_nr_poses;
@@ -432,7 +435,20 @@ public:
             }
         }
 
-        cuda_->weigh_poses(update_occlusions, flog_likelihoods);
+        cuda_->weigh_poses(update_occlusions, flog_likelihoods, pixel_points);
+
+        int max{0};
+        std::map<int,int> hash_table;
+        object_pixel_index = -1;
+        for(auto idx:pixel_points)
+        {
+            hash_table[idx]++;
+            if (hash_table[idx]>max)
+            {
+                max = hash_table[idx];
+                object_pixel_index = idx;
+            }
+        }
 
         if (optimize_nr_threads_)
         {

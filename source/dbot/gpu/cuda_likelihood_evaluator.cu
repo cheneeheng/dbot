@@ -147,7 +147,7 @@ __device__ float prob(float observation, float prediction, bool occluded)
 
 
 __global__ void evaluate_kernel(float *observations, float* old_occlusion_probs, float* new_occlusion_probs, int* occlusion_image_indices, int nr_pixels,
-                                 float *d_log_likelihoods, float delta_time, int n_poses, int n_rows, int n_cols, bool update_occlusions) {
+                                 float *d_log_likelihoods, int *d_pixel_points_, float delta_time, int n_poses, int n_rows, int n_cols, bool update_occlusions) {
     int block_id = blockIdx.x + blockIdx.y * gridDim.x;
     if (block_id < n_poses) {
 
@@ -207,6 +207,9 @@ __global__ void evaluate_kernel(float *observations, float* old_occlusion_probs,
 
 
             if (depth != 0 && !isnan(observed_depth)) {
+
+                // pixel position of object
+                d_pixel_points_[block_id] = pixel_nr;
 
                 // prob of observation given prediction, knowing that the object is not occluded
                 p_obsIpred_vis = prob(observed_depth, depth, false) * (1 - occlusion_prob);
@@ -301,6 +304,7 @@ CudaEvaluator::CudaEvaluator(const int nr_rows,
     d_occlusion_probs_copy_ = NULL;
     d_observations_ = NULL;
     d_log_likelihoods_ = NULL;
+    d_pixel_points_ = NULL;
     d_occlusion_indices_ = NULL;
 
     set_nr_threads(DEFAULT_NR_THREADS);
@@ -389,7 +393,7 @@ void CudaEvaluator::init(const float initial_occlusion_prob, const float p_occlu
 
 
 
-void CudaEvaluator::weigh_poses(const bool update_occlusions, vector<float> &log_likelihoods) {
+void CudaEvaluator::weigh_poses(const bool update_occlusions, vector<float> &log_likelihoods, vector<int> &pixel_points) {
     if (observations_set_ && occlusion_indices_set_
             && memory_allocated_ && number_of_poses_set_ && constants_initialized_
             && texture_array_mapped_) {
@@ -399,7 +403,7 @@ void CudaEvaluator::weigh_poses(const bool update_occlusions, vector<float> &log
 
 
         evaluate_kernel <<< grid_dimension_, nr_threads_ >>> (d_observations_, d_occlusion_probs_, d_occlusion_probs_copy_, d_occlusion_indices_, nr_cols_ * nr_rows_,
-                                               d_log_likelihoods_, delta_time, nr_poses_, nr_rows_, nr_cols_, update_occlusions);
+                                               d_log_likelihoods_, d_pixel_points_, delta_time, nr_poses_, nr_rows_, nr_cols_, update_occlusions);
         #ifdef DEBUG
             check_cuda_error("compare kernel call");
         #endif
@@ -419,6 +423,9 @@ void CudaEvaluator::weigh_poses(const bool update_occlusions, vector<float> &log
 
 
         cudaMemcpy(&log_likelihoods[0], d_log_likelihoods_, nr_poses_ * sizeof(float), cudaMemcpyDeviceToHost);
+
+        cudaMemcpy(&pixel_points[0], d_pixel_points_, nr_poses_ * sizeof(int), cudaMemcpyDeviceToHost);
+
         #ifdef DEBUG
             check_cuda_error("cudaMemcpy d_log_likelihoods -> log_likelihoods");
         #endif
@@ -589,6 +596,7 @@ void CudaEvaluator::allocate_memory_for_max_poses(int nr_poses,
 
 
         // reallocate arrays
+        allocate(d_pixel_points_, sizeof(int) * max_nr_poses_);
         allocate(d_log_likelihoods_, sizeof(float) * max_nr_poses_);
         allocate(d_occlusion_indices_, sizeof(int) * max_nr_poses_);
         occlusion_probs_size_ = nr_rows_ * nr_cols_ * max_nr_poses_;
@@ -606,6 +614,7 @@ void CudaEvaluator::allocate_memory_for_max_poses(int nr_poses,
         #endif
 
         // initialize log likelihoods with 0
+        cudaMemset(d_pixel_points_, 0, sizeof(int) * max_nr_poses_);
         cudaMemset(d_log_likelihoods_, 0, sizeof(float) * max_nr_poses_);
         #ifdef DEBUG
             check_cuda_error("cudaMemset d_log_likelihoods");
@@ -749,6 +758,7 @@ CudaEvaluator::~CudaEvaluator() {
     cudaFree(d_occlusion_probs_copy_);
     cudaFree(d_observations_);
     cudaFree(d_log_likelihoods_);
+    cudaFree(d_pixel_points_);
     cudaFree(d_occlusion_indices_);
     cudaDeviceReset();
 }

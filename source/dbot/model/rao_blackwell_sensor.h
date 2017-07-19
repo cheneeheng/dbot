@@ -63,6 +63,7 @@ public:
     /// likelihood computation *************************************************
     virtual RealArray loglikes(const StateArray& deviations,
                                IntArray& indices,
+                               int& object_index,
                                const bool& update = false) = 0;
 
     // compute the loglikelihoods without keeping track of the occulsions
@@ -70,7 +71,8 @@ public:
     {
         reset();
         IntArray zero_indices = IntArray::Zero(deviations.size());
-        return loglikes(deviations, zero_indices, false);
+        int object_index = -1;
+        return loglikes(deviations, zero_indices, object_index, false);
     }
 
     /// accessors **************************************************************

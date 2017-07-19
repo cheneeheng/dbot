@@ -62,7 +62,7 @@ public:
      * \brief Hook function which is called during tracking
      * \return Current belief state
      */
-    virtual State on_track(const Obsrv& image) = 0;
+    virtual State on_track(const Obsrv& image, int& object_pixel_index) = 0;
 
     /**
      * \brief Hook function which is called during initialization
@@ -119,6 +119,8 @@ public:
                       State& moving_average,
                       double update_rate);
 
+    int object_pixel_index();
+
     /**
      * \brief Shorthand for a zero input vector
      */
@@ -130,5 +132,6 @@ protected:
     double update_rate_;
     bool center_object_frame_;
     std::mutex mutex_;
+    int object_pixel_index_;
 };
 }

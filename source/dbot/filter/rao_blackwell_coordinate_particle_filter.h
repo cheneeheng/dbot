@@ -66,7 +66,8 @@ public:
         const fl::Real& max_kl_divergence = 0)
         : sensor_(sensor),
           transition_(transition),
-          max_kl_divergence_(max_kl_divergence)
+          max_kl_divergence_(max_kl_divergence),
+          object_pixel_index_(-1)
     {
         sampling_blocks_ = sampling_blocks;
 
@@ -116,7 +117,7 @@ public:
             // compute likelihood ----------------------------------------------
             bool update = (i_block == sampling_blocks_.size() - 1);
             RealArray new_loglikes = sensor_->loglikes(
-                belief_.locations(), indices_, update);
+                belief_.locations(), indices_, object_pixel_index_, update);
 
             // update the weights and resample if necessary --------------------
             belief_.delta_log_prob_mass(new_loglikes - loglikes_);
@@ -188,10 +189,17 @@ public:
         return transition_;
     }
 
+    int object_pixel_index()
+    {
+        return object_pixel_index_;
+    }
+
 private:
     /// member variables *******************************************************
     Belief belief_;
     IntArray indices_;
+
+    int object_pixel_index_;
 
     std::vector<Noise> noises_;
     StateArray old_particles_;

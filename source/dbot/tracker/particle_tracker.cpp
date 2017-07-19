@@ -56,9 +56,11 @@ auto ParticleTracker::on_initialize(
     return integrated_poses;
 }
 
-auto ParticleTracker::on_track(const Obsrv& image) -> State
+auto ParticleTracker::on_track(const Obsrv& image, int& object_pixel_index) -> State
 {
     filter_->filter(image, zero_input());
+
+    object_pixel_index = filter_->object_pixel_index();
 
     State delta_mean = filter_->belief().mean();
 

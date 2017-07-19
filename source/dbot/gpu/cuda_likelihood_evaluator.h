@@ -118,7 +118,8 @@ public:
      *     The computed likelihoods for each pose
      */
     void weigh_poses(const bool update_occlusions,
-                     std::vector<float>& log_likelihoods);
+                     std::vector<float>& log_likelihoods,
+                     std::vector<int>& pixel_points);
 
     // setters
 
@@ -269,6 +270,7 @@ private:
     float* d_occlusion_probs_copy_;
     float* d_observations_;
     float* d_log_likelihoods_;
+    int* d_pixel_points_;
     int* d_occlusion_indices_;  // this contains, for each pose, the index into
                                 // the occlusion probabilities array, which
                                 // contains the occlusion probabilities for that

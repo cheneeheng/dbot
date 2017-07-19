@@ -119,6 +119,7 @@ public:
     virtual ~KinectImageModel() noexcept {}
     RealArray loglikes(const StateArray& deltas,
                        IntArray& indices,
+                       int& object_index,
                        const bool& update = false)
     {
         std::vector<std::vector<float>> new_occlusions(deltas.size());
@@ -127,6 +128,8 @@ public:
         RealArray log_likes = RealArray::Zero(deltas.size());
         for (size_t i_state = 0; i_state < size_t(deltas.size()); i_state++)
         {
+            // object_index = ...
+
             if (update)
             {
                 new_occlusions[i_state] = occlusions_[indices[i_state]];
