@@ -195,6 +195,6 @@ endif(DBOT_BUILD_GPU)
 ############################
 # Tests                    #
 ############################
-enable_testing()
-include(${CMAKE_MODULE_PATH}/gtest.cmake)
-include(utests.cmake)
+#enable_testing()
+#include(${CMAKE_MODULE_PATH}/gtest.cmake)
+#include(utests.cmake)
